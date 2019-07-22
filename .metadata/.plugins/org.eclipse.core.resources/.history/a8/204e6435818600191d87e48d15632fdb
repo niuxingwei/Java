@@ -1,0 +1,32 @@
+package PrintJob;
+
+interface Anmian{
+	 public void eat();
+	   public void travel();
+}
+ class AAA implements Anmian{
+
+	@Override
+	public void eat() {
+		// TODO Auto-generated method stub
+		System.out.println("============");
+	}
+
+	@Override
+	public void travel() {
+		// TODO Auto-generated method stub
+		System.out.println("+++++++++++");
+	}
+	
+}
+ 
+public class Sting {
+
+	public static void main(java.lang.String[] args) {
+		// TODO Auto-generated method stub
+    AAA aa = new AAA();
+    aa.eat();
+    aa.travel();
+	}
+
+}

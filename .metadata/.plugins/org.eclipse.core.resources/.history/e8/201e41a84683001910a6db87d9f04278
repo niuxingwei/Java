@@ -1,0 +1,167 @@
+package PrintJob;
+
+class PrintJob {
+	private String jobName;
+	private int pages;
+
+	public PrintJob(String name, int pages) {
+		this.jobName = name;
+		this.pages = pages;
+	}
+
+	public String getName() {
+		return this.jobName;
+	}
+
+	public int getPages() {
+		return this.pages;
+	}
+}// PrintJob
+
+class Producer implements Runnable {
+	private int sizeOfJobs;
+	private int numberOfJobs;
+	private int delayBetweenJobs;
+	private String producerName;
+
+	public Producer(int sizeOfJobs, int numberOfJobs, int delayBetweenJobs, String producerName) {
+		this.sizeOfJobs = sizeOfJobs;
+		this.numberOfJobs = numberOfJobs;
+		this.delayBetweenJobs = delayBetweenJobs;
+		this.producerName = producerName;
+	}
+
+	@Override
+	public void run() {
+
+		try {
+			for (int i = 1; i <= this.numberOfJobs; i++) {
+				PrintJob pJob = new PrintJob(this.producerName + "#" + i, this.sizeOfJobs);
+				Printer.getInstance().addJob(pJob);
+				System.out.println("P: Adding job" + "'" + pJob.getName() + "' to the queue");
+				synchronized (Printer.getInstance()) {
+					System.out.println("GETINSTANCE");
+					Printer.getInstance().notifyAll();
+					try {
+						Thread.sleep(this.delayBetweenJobs);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("ERROR");
+
+		}
+	}
+
+}// Producer
+
+class Printer implements Runnable {
+	private static Printer instance = new Printer();
+	private CircularQueue printQueue;
+	private boolean stateIsRinning;
+	private int milliseconds = 500;
+
+	private Printer() {
+		this.stateIsRinning = true;
+		printQueue = new CircularQueue(6);
+	}
+
+	public static Printer getInstance() {
+		return instance;
+
+	}
+
+	public synchronized void addJob(PrintJob printJob) throws FullQueueException {
+		while (printQueue.getSize() > this.printQueue.getCapacity()) {
+			try {
+				this.wait();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		this.printQueue.addBack(printJob);
+		this.notifyAll();
+
+	}
+
+	private synchronized PrintJob getJob() throws EmptyQueueException {
+		return (PrintJob) this.printQueue.getFront();
+
+	}
+
+	public synchronized void halt() {
+		stateIsRinning = false;
+	}
+
+	@Override
+	public void run() {
+
+		System.out.println("C: Print manager is starting up");
+		while (this.stateIsRinning) {
+			
+			while (this.printQueue.isEmpty()) {
+				System.out.println("C: Waiting on a job to print.");
+				synchronized (this) {
+					try {
+						this.wait();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+			synchronized (this) {
+				System.out.println(" C: Starting job" + "'" + this.getJob().getName() + "'");
+				long WaitingTime = this.milliseconds * this.getJob().getPages();
+				while (WaitingTime > 0) {
+					try {
+						this.wait(WaitingTime);
+						long begin = System.currentTimeMillis();
+						long end = System.currentTimeMillis();
+						WaitingTime -= end - begin;
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+			System.out.println("C: Completed job " + "'" + this.getJob().getName() + "'");
+			this.printQueue.removeFront();
+			this.notifyAll();
+		}
+		System.out.println("C: Print manager is halted.");
+	}
+
+}// Printer
+
+public class TestPrinter {
+
+	public static void main(String[] args) throws InterruptedException {
+		Producer p1 = new Producer(5, 3, 20, "Producer_First");
+		Producer p2 = new Producer(15, 6, 60, "Producer_Second");
+		Producer p3 = new Producer(25, 9, 100, "Producer_Third");
+
+		Printer manager = Printer.getInstance();
+		Thread Manmger = new Thread(manager);
+		Manmger.setPriority(Thread.MAX_PRIORITY);
+		Manmger.start();
+
+		Thread P11 = new Thread(p1);
+		P11.start();
+		Thread P12 = new Thread(p2);
+		P12.start();
+		Thread P13 = new Thread(p3);
+		P13.start();
+
+		P11.join();
+		P12.join();
+		P13.join();
+
+		manager.halt();
+
+	}// main
+
+}// AdvancedThread

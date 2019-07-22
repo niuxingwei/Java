@@ -1,0 +1,26 @@
+package PrintJob;
+
+class a{
+	public a() {
+		// TODO Auto-generated constructor stub
+		System.out.println("========");
+	}
+}
+
+class b extends a{
+	public b() {
+		// TODO Auto-generated constructor stub
+		System.out.println("++++++++++");
+	}
+}
+
+ 
+public class Sting {
+
+	public static void main(java.lang.String[] args) {
+		// TODO Auto-generated method stub
+          b aB = new b();
+
+	}
+
+}

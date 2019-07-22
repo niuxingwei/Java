@@ -1,0 +1,20 @@
+package PrintJob;
+
+
+public class Sting {
+
+	public static void main(java.lang.String[] args) {
+		// TODO Auto-generated method stub
+		String s= "abcde";
+		StringBuffer s1= new  StringBuffer("abcde");
+		if (s.equals(s1)) {
+			s1=null;
+		}
+		if (s1.equals(s)) {
+			s=null;
+		}
+		System.out.println(s);
+		System.out.println(s1);
+	}
+
+}
